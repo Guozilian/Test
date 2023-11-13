@@ -1,5 +1,6 @@
 import com.csvreader.CsvReader;
 import org.example.dao.Dao;
+import org.example.service.InsertCSVtoMysql;
 import org.example.ulit.MyUlit;
 import org.junit.After;
 import org.junit.Before;
@@ -17,11 +18,20 @@ public class TestClassforG {
 
     Dao dao;
     MyUlit myUlit;
+    String csvPath="E:/cfmx.csv";
+    InsertCSVtoMysql insertCSVtoMysql;
+    char splitChar=',';
 
     @Before
-    public void before(){
-    dao=new Dao();
-    myUlit=new MyUlit();
+    public void before() throws SQLException {
+
+    myUlit=new MyUlit(csvPath,splitChar,"utf-8");
+
+
+    insertCSVtoMysql=new InsertCSVtoMysql();
+    dao=insertCSVtoMysql.dao;
+    dao.setSchemes("work");
+
     }
 
     @Test
@@ -30,7 +40,7 @@ public class TestClassforG {
     }
     @Test
     public void testMyUlit_getCsvHead() throws IOException {
-        String a[]= myUlit.getCsvHead("E:/cfmx.csv",',');
+        String a[]= myUlit.getCsvHead();
         for (String b:a){
             System.out.printf(b+",");
         }
@@ -44,13 +54,13 @@ public class TestClassforG {
 
     @Test
     public void Dao_creatTable() throws SQLException, IOException {
-        String colName[]= myUlit.getCsvHead("E:/jzmx.csv",',');
+        String colName[]= myUlit.getCsvHead();
         String a=myUlit.getCreat_tableSql("work","jzmx",colName);
         dao.creat_table(a);
     }
     @Test
     public void Dao_DropTable () throws SQLException {
-        dao.drop_table("test2");
+        dao.drop_table("work","test2");
     }
 
     @Test
@@ -59,40 +69,41 @@ public class TestClassforG {
     }
     @Test
     public void getInsert_tableSql() throws IOException {
-        String colName[]= myUlit.getCsvHead("E:/jzmx.csv",',');
+        String colName[]= myUlit.getCsvHead();
         String a= myUlit.getInsert_tableSql("work","jzmx",colName);
         System.out.println(a);
     }
-
-
-    @Test
-    public void insert() throws SQLException, IOException {
-        dao.insertJzmx();
-        dao.close();
-        System.out.println("导入完成");
-    }
-
-    @Test
-    public void insert1() throws SQLException, IOException {
-        dao.insertCfmx();
-        dao.close();
-        System.out.println("导入完成");
-    }
     @Test
     public void a() throws IOException {
-        String colName[]= myUlit.getCsvHead("E:/jzmx.csv",',');
+        String colName[]= myUlit.getCsvHead();
+        for (String a:colName)
+            System.out.print(a+"$#$");
+            System.out.print("\n");
         List list=myUlit.getType(colName);
         System.out.println(list.toString());
     }
     @Test
-    public void b(){
-        String b="2016/25/3 00.2123523dfg";
-        if(b.matches("\\d{4}\\/\\d{1,2}\\/\\d{1,2}.*"))
-            System.out.println("true");
+    public void b() throws SQLException {
+//        String b="2016/25/3 00.2123523dfg";
+//        if(b.matches("\\d{4}\\/\\d{1,2}\\/\\d{1,2}.*"))
+//            System.out.println("true");
+    }
+    @Test
+    public void InsertCsv1() throws SQLException, IOException {
+        insertCSVtoMysql.loadingCsvToMysql();
+    }
+    @Test
+    public void InsertCsv2() throws SQLException, IOException {
+        insertCSVtoMysql.insertCsv();
+    }
+    @Test
+    public void cc(){
+        System.out.printf(myUlit.getDate());
     }
     @After
     public void after(){
         dao.close();
+        insertCSVtoMysql.close();
     }
 
 }

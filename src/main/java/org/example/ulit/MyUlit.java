@@ -1,15 +1,11 @@
 package org.example.ulit;
 
 import com.csvreader.CsvReader;
-import org.example.dao.Dao;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.charset.Charset;
-import java.sql.ClientInfoStatus;
 import java.sql.Timestamp;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -18,7 +14,24 @@ import java.util.List;
 public class MyUlit {
     CsvReader csvReader;
     DateTimeFormatter dateTimeFormatter;
+    String csvPath;
+    char splitChar;
+    String csvEnCode;
 
+
+
+    public MyUlit(String csvPath, char splitChar,String csvEnCode) {
+        this.csvPath = csvPath;
+        this.splitChar = splitChar;
+        this.csvEnCode=csvEnCode;
+    }
+
+    public CsvReader getNewCsvreader() throws FileNotFoundException {
+        return new CsvReader(csvPath,splitChar,Charset.forName(csvEnCode));
+    }
+    /*
+                   得到一个时间戳，用于
+                * */
     public Timestamp getTextTimestap(String text) {
         dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/M/d HH:mm:ss");
         if (text!="")
@@ -33,7 +46,7 @@ public class MyUlit {
     }
     public void lookCsv(int lineNum, String path, char split) throws IOException {
         String[] record;
-        csvReader = new CsvReader(path, split, Charset.forName("UTF-8"));
+        csvReader = getNewCsvreader();
         for (int i = 0; i < lineNum; i++) {
             int n=0;
             if (csvReader.readRecord()) {
@@ -51,11 +64,10 @@ public class MyUlit {
         }
         csvReader.close();
     }
-    public String[]  getCsvHead(String path, char split) throws IOException {
-        csvReader = new CsvReader(path, split, Charset.forName("UTF-8"));
+    public String[]  getCsvHead() throws IOException {
+        csvReader = getNewCsvreader();
         csvReader.readHeaders();
         String [] a=csvReader.getHeaders();
-        csvReader.close();
         return a;
     }
     public String getCreat_tableSql(String dataBaseNane,String tableName,String [] colName){
@@ -88,20 +100,26 @@ public class MyUlit {
             switch (coltype){
                 case 1:sql+="`"+a+"` float,";break;
                 case 2:sql+="`"+a+"` datetime,";break;
-                default: sql+="`"+a+"` varchar(50),";
+                default: sql+="`"+a+"` varchar(255),";
             }
         }
         sql+="primary key(`自设编号`)";
         sql+=")engine=InnoDB DEFAULT CHARACTER SET=utf8;";
-//        sql= "create table  if not exists `work`.`table1`(" +
-//                "`编号` int unsigned auto_increment," +
-//                "`姓名` varchar(20)," +
-//                "primary key(`编号`)" +
-//                ")engine=InnoDB default charset=utf8";
+
+        return sql;
+    }
+    public String getCreat_tableSql(String schemas,String [] colName,int tempForCsvLone){
+        String sql="create table if not exists"+" `"+schemas+"`.`tempForCsv`(";
+        for (String a:colName){
+            sql+="`"+a+"` varchar("+tempForCsvLone+"),";
+        }
+        sql=sql.substring(0,sql.length()-1);
+        sql+=")engine=InnoDB DEFAULT CHARACTER SET=utf8;";
         return sql;
     }
 
     public List<Integer> getType(String [] colName){
+        //0:字符 1：float  2：date
         List<Integer> typeArray=new ArrayList();
         for (String a:colName){
 
@@ -172,5 +190,8 @@ public class MyUlit {
         sqlB+=")";
 
         return sql+sqlB;
+    }
+    public String getDate(){
+        return LocalDateTime.now().toString();
     }
 }
